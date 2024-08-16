@@ -15,7 +15,7 @@ m_ioc{ioc}, m_host{host}, m_path{path}, m_port{port}, m_ws{m_ioc}, m_resolver{m_
     
 }
 
-void WebSocketClient::Connect(std::function<void (const boost::system::error_code&)> onConnect, std::function<void (const boost::system::error_code&, const std::string&)> onMessage, std::function<void (const boost::system::error_code&)> onConnectErrOrDisconnect) {
+void WebSocketClient::Connect(std::function<void (const boost::system::error_code&)> onConnect, std::function<void (const boost::system::error_code&, std::string&&)> onMessage, std::function<void (const boost::system::error_code&)> onConnectErrOrDisconnect) {
     m_onConnect = onConnect;
     m_onMessage = onMessage;
     m_onConnectErrOrDisconnect = onConnectErrOrDisconnect;
@@ -26,6 +26,7 @@ void WebSocketClient::Connect(std::function<void (const boost::system::error_cod
             std::cout << "Could not resolve host and port" << std::endl;
             if (m_onConnectErrOrDisconnect)
                 m_onConnectErrOrDisconnect(ec);
+            return;
         }
 
         std::cout << "Resolved host and port" << std::endl;
@@ -36,6 +37,7 @@ void WebSocketClient::Connect(std::function<void (const boost::system::error_cod
                 std::cout << "Could not connect to endpoint" << std::endl;
                 if (m_onConnectErrOrDisconnect)
                     m_onConnectErrOrDisconnect(ec);
+                return;
             }
 
             std::cout << "Connected to endpoint" << std::endl;
@@ -46,6 +48,7 @@ void WebSocketClient::Connect(std::function<void (const boost::system::error_cod
                     std::cout << "Could not perform ws handshake" << std::endl;
                     if (m_onConnectErrOrDisconnect)
                         m_onConnectErrOrDisconnect(ec);
+                    return;
                 }
 
                 std::cout << "Performed ws handshake" << std::endl;
@@ -75,7 +78,7 @@ void WebSocketClient::ReadRecursively() {
             std::cout << "Reading buffer" << std::endl;
 
             if (m_onMessage)
-                m_onMessage(ec, boost::beast::buffers_to_string(m_rBuffer.data()));
+                m_onMessage(ec, std::move(boost::beast::buffers_to_string(m_rBuffer.data())));
 
             m_rBuffer.consume(bytesRead);
         }
@@ -84,6 +87,7 @@ void WebSocketClient::ReadRecursively() {
     });
 }
 
+// we dont want msg to be a temporary hence not const& or &&
 void WebSocketClient::Send(std::string& msg, std::function<void(const boost::system::error_code&)> onSend) {
     m_wBuffer = boost::asio::const_buffer {msg.c_str(), msg.size()};
 

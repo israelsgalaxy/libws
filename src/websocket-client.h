@@ -12,7 +12,7 @@ public:
     WebSocketClient(boost::asio::io_context&, const std::string&, const std::string&, const std::string&);
     ~WebSocketClient() = default;
 
-    void Connect(std::function<void(const boost::system::error_code&)> = nullptr, std::function<void(const boost::system::error_code&, const std::string&)> = nullptr, std::function<void(const boost::system::error_code&)> = nullptr);
+    void Connect(std::function<void(const boost::system::error_code&)> = nullptr, std::function<void(const boost::system::error_code&, std::string&&)> = nullptr, std::function<void(const boost::system::error_code&)> = nullptr);
     void Send(std::string&, std::function<void(const boost::system::error_code&)> = nullptr);
     void Close(std::function<void(const boost::system::error_code&)> = nullptr);
 
@@ -28,7 +28,7 @@ private:
     boost::asio::const_buffer m_wBuffer {};
 
     std::function<void(const boost::system::error_code&)> m_onConnect;
-    std::function<void(const boost::system::error_code&, const std::string&)> m_onMessage;
+    std::function<void(const boost::system::error_code&, std::string&&)> m_onMessage;
     std::function<void(const boost::system::error_code&)> m_onConnectErrOrDisconnect;
 
     void ReadRecursively();
